@@ -10,7 +10,8 @@ import {
   ValidationError,
 } from "@react-mool/core"
 import { GQlessClient, GQlessError, Schema, selectFields } from "gqless"
-import { fixInputData } from "./fixInputData"
+import { fixInputData } from "./helpers/fixInputData"
+import { validateRequiredInputData } from "./helpers/validateRequiredInputData"
 
 export type GQlessOperationConfig<TInput = any, TOutput = any> = {
   name?: (resource: string) => string
@@ -45,7 +46,9 @@ export type GQlessDataProviderConfig = {
   exceptions?: Record<string, GQlessException | undefined>
   overrideMethods?: GQlessOverrideMethods
   selectFieldsDepth?: number
-  autofixInputData?: boolean
+  autoFixInputData?: boolean
+  autoValidateRequiredInputData?: boolean
+  requiredErrorMessage?: string
   handleError?: (error: any, defaultHandler: () => never) => never
 }
 
@@ -98,14 +101,23 @@ export function createGQlessDataProvider(config: GQlessDataProviderConfig) {
     exceptions = {},
     overrideMethods = {},
     selectFieldsDepth = 1,
-    autofixInputData = gqlessSchema ? true : false,
+    autoFixInputData = gqlessSchema ? true : false,
+    autoValidateRequiredInputData = gqlessSchema ? true : false,
+    requiredErrorMessage = "required",
     handleError,
   } = config
 
   // Check autofix can be enabled
-  if (autofixInputData && !gqlessSchema) {
+  if (autoFixInputData && !gqlessSchema) {
     throw new Error(
-      `"autofixInputData" can be enabled only if "gqlessSchema" is provided.`
+      `"autoFixInputData" can be enabled only if "gqlessSchema" is provided.`
+    )
+  }
+
+  // Check autovalidate can be enabled
+  if (autoValidateRequiredInputData && !gqlessSchema) {
+    throw new Error(
+      `"autoValidateRequiredInputData" can be enabled only if "gqlessSchema" is provided.`
     )
   }
 
@@ -149,19 +161,33 @@ export function createGQlessDataProvider(config: GQlessDataProviderConfig) {
     }
 
     const buildInput = () => {
-      const input = operation.input(resource, params, funcName)
+      let input = operation.input(resource, params, funcName)
 
-      if (autofixInputData && gqlessSchema) {
+      if (autoFixInputData && gqlessSchema) {
         const type = gqlessSchema[kind][funcName]
-        return fixInputData(input, type, gqlessSchema)
-      } else {
-        return input
+        input = fixInputData(input, type, gqlessSchema)
       }
+
+      if (autoValidateRequiredInputData && gqlessSchema) {
+        const type = gqlessSchema[kind][funcName]
+        const validationErrors = validateRequiredInputData(
+          input,
+          type,
+          gqlessSchema,
+          requiredErrorMessage
+        )
+        if (validationErrors) {
+          throw new ValidationError(validationErrors)
+        }
+      }
+
+      return input
     }
+
+    const input = buildInput()
 
     return gqlessClient.resolved(
       () => {
-        const input = buildInput()
         const result = func(input)
         const output = operation.output(resource, result, funcName)
         return output

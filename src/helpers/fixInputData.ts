@@ -1,14 +1,5 @@
 import { parseSchemaType, Schema, Type } from "gqless"
-
-function isPlainObject(value: any) {
-  return value != null && !Array.isArray(value)
-}
-
-const scalars = ["Int", "Float", "String", "Boolean", "ID"]
-
-function isScalar(typeName: string) {
-  return scalars.includes(typeName)
-}
+import { isPlainObject, isScalar } from "./utils"
 
 function fixScalar(value: any, typeName: string) {
   switch (typeName) {
