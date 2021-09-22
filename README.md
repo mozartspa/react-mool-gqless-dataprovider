@@ -1,7 +1,6 @@
 # @mozartspa/react-mool-gqless-dataprovider
 
-A GraphQL data provider for [react-mool](https://github.com/mozartspa/react-mool/)
-built with [GQless](https://gqless.com/).
+A GraphQL data provider for [react-mool](https://github.com/mozartspa/react-mool/) built with [GQless](https://gqless.com/).
 
 ## Installation
 
@@ -26,6 +25,7 @@ export const dataProvider = createGQlessDataProvider({
 ```
 
 If the default settings don't suit you, you can customize the behavior:
+
 - per **operation** (`getOne`, `getList`, `create`, `update` and `delete`)
 - per **resource**
 - or completely override one of the methods
@@ -38,7 +38,7 @@ export const dataProvider = createGQlessDataProvider({
   // Customize how to extract the ID from the record
   getRecordId: (resource, record) => record.id,
 
-  /* 
+  /*
     Per each operation, you can define:
     - name: which query/mutation should be called
     - input: how to convert the input params to suit your query/mutation expected inputs
@@ -81,7 +81,7 @@ export const dataProvider = createGQlessDataProvider({
     // `article` is the name of our sample resource
     article: {
       /*
-       Define the operations you want to override 
+       Define the operations you want to override
       */
       operations: {
         getList: {
@@ -103,7 +103,7 @@ export const dataProvider = createGQlessDataProvider({
 
       /*
        If you want to completely override a method for this resource
-       and implement it yourself then do it in `overrideMethods`. 
+       and implement it yourself then do it in `overrideMethods`.
       */
       overrideMethods: {
         /* override single methods of resource `article` */
@@ -113,7 +113,7 @@ export const dataProvider = createGQlessDataProvider({
 
   /*
    If you want to completely override a method for all the resources
-   and implement it yourself then do it in `overrideMethods`. 
+   and implement it yourself then do it in `overrideMethods`.
   */
   overrideMethods: {
     getOne: /* ... */,
