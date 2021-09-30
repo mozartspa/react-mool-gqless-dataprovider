@@ -45,5 +45,8 @@
   "peerDependencies": {
     "@react-mool/core": "*",
     "gqless": "^2.0"
+  },
+  "dependencies": {
+    "dset": "^3.1.0"
   }
 }

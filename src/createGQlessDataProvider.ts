@@ -9,6 +9,7 @@ import {
   UpdateParams,
   ValidationError,
 } from "@react-mool/core"
+import { dset } from "dset"
 import { GQlessClient, GQlessError, Schema, selectFields } from "gqless"
 import { fixInputData } from "./fixInputData"
 
@@ -87,6 +88,19 @@ function defaultErrorHandler(error: any): never {
   }
 
   throw error
+}
+
+function buildOrderBy(
+  sortField: GetListParams["sortField"],
+  sortOrder: GetListParams["sortOrder"]
+) {
+  if (sortField) {
+    let orderBy = {}
+    dset(orderBy, sortField, sortOrder)
+    return [orderBy]
+  } else {
+    return undefined
+  }
 }
 
 export function createGQlessDataProvider(config: GQlessDataProviderConfig) {
@@ -192,9 +206,7 @@ export function createGQlessDataProvider(config: GQlessDataProviderConfig) {
         where: params.filter,
         skip: params.pageSize * (params.page - 1),
         take: params.pageSize,
-        orderBy: params.sortField
-          ? [{ [params.sortField]: params.sortOrder }]
-          : undefined,
+        orderBy: buildOrderBy(params.sortField, params.sortOrder),
       }
     },
     output: (resource, result) => {
