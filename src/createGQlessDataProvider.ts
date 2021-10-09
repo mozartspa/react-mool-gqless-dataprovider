@@ -11,7 +11,8 @@ import {
 } from "@react-mool/core"
 import { dset } from "dset"
 import { GQlessClient, GQlessError, Schema, selectFields } from "gqless"
-import { fixInputData } from "./fixInputData"
+import { fixInputData } from "./helpers/fixInputData"
+import { createQueryBatcher } from "./helpers/queryBatcher"
 
 export type GQlessOperationConfig<TInput = any, TOutput = any> = {
   name?: (resource: string) => string
@@ -47,6 +48,7 @@ export type GQlessDataProviderConfig = {
   overrideMethods?: GQlessOverrideMethods
   selectFieldsDepth?: number
   autofixInputData?: boolean
+  queryBatchTimeMS?: number
   handleError?: (error: any, defaultHandler: () => never) => never
 }
 
@@ -113,6 +115,7 @@ export function createGQlessDataProvider(config: GQlessDataProviderConfig) {
     overrideMethods = {},
     selectFieldsDepth = 1,
     autofixInputData = gqlessSchema ? true : false,
+    queryBatchTimeMS = 50,
     handleError,
   } = config
 
@@ -122,6 +125,11 @@ export function createGQlessDataProvider(config: GQlessDataProviderConfig) {
       `"autofixInputData" can be enabled only if "gqlessSchema" is provided.`
     )
   }
+
+  const batcher = createQueryBatcher({
+    gqlessClient,
+    queryBatchTimeMS,
+  })
 
   function withErrorHandler<TInput extends Array<any>, TOutput>(
     func: (...input: TInput) => Promise<TOutput>
@@ -173,18 +181,25 @@ export function createGQlessDataProvider(config: GQlessDataProviderConfig) {
       }
     }
 
-    return gqlessClient.resolved(
-      () => {
-        const input = buildInput()
-        const result = func(input)
-        const output = operation.output(resource, result, funcName)
-        return output
-      },
-      {
+    const input = buildInput()
+
+    const request = () => {
+      const result = func(input)
+      const output = operation.output(resource, result, funcName)
+      return output
+    }
+
+    // Batch only requests that are queries.
+    const shouldBatch = kind === "query" && queryBatchTimeMS > 0
+
+    if (shouldBatch) {
+      return batcher.request(request)
+    } else {
+      return gqlessClient.resolved(request, {
         noCache: true,
         retry: false,
-      }
-    )
+      })
+    }
   }
 
   const getSelectFieldsDepth = (resource: string) => {
