@@ -136,6 +136,12 @@ export const dataProvider = createGQlessDataProvider({
   autofixInputData: false, // default: true
 
   /*
+    How many milliseconds to wait to group queries.
+    If `0` or less then batching is disabled.
+  */
+  queryBatchTimeMS: 80, // default: 50
+
+  /*
    Which error should be thrown in case of failure.
    `defaultHandler` can be called to handle the error in the default way.
   */
