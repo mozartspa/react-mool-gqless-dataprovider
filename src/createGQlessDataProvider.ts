@@ -32,11 +32,14 @@ export type GQlessGetRecordId = (resource: string, record: any) => RecordID
 
 export type GQlessOverrideMethods = Partial<Omit<DataProvider, "id">>
 
+export type GQlessRecordOuput<TRecord = any, TOutput = any> = (record: TRecord) => TOutput
+
 export type GQlessException = {
   operations?: GQlessOperations
   getRecordId?: GQlessGetRecordId
   overrideMethods?: GQlessOverrideMethods
   selectFieldsDepth?: number
+  recordOutput?: GQlessRecordOuput
 }
 
 export type GQlessDataProviderConfig = {
@@ -206,11 +209,20 @@ export function createGQlessDataProvider(config: GQlessDataProviderConfig) {
     return exceptions[resource]?.selectFieldsDepth ?? selectFieldsDepth
   }
 
+  const getRecordOuput = (resource: string, result: any) => {
+    const recordOutput = exceptions[resource]?.recordOutput
+    if (recordOutput) {
+      return recordOutput(result)
+    } else {
+      return selectFields(result, "*", getSelectFieldsDepth(resource))
+    }
+  }
+
   const getOneOperation: Required<GQlessOperations["getOne"]> = {
     name: (resource) => `${resource}`,
     input: (_, params) => params,
     output: (resource, result) => {
-      return selectFields(result, "*", getSelectFieldsDepth(resource))
+      return getRecordOuput(resource, result)
     },
   }
 
@@ -226,7 +238,7 @@ export function createGQlessDataProvider(config: GQlessDataProviderConfig) {
     },
     output: (resource, result) => {
       return {
-        items: selectFields(result?.items, "*", getSelectFieldsDepth(resource)) || [],
+        items: result?.items?.map((item: any) => getRecordOuput(resource, item)) || [],
         total: result?.total || 0,
       }
     },
@@ -240,7 +252,7 @@ export function createGQlessDataProvider(config: GQlessDataProviderConfig) {
       }
     },
     output: (resource, result) => {
-      return selectFields(result, "*", getSelectFieldsDepth(resource))
+      return getRecordOuput(resource, result)
     },
   }
 
@@ -255,7 +267,7 @@ export function createGQlessDataProvider(config: GQlessDataProviderConfig) {
       }
     },
     output: (resource, result) => {
-      return selectFields(result, "*", getSelectFieldsDepth(resource))
+      return getRecordOuput(resource, result)
     },
   }
 
@@ -263,7 +275,7 @@ export function createGQlessDataProvider(config: GQlessDataProviderConfig) {
     name: (resource) => `${resource}Delete`,
     input: (_, params) => params,
     output: (resource, result) => {
-      return selectFields(result, "*", getSelectFieldsDepth(resource))
+      return getRecordOuput(resource, result)
     },
   }
 
