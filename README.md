@@ -102,6 +102,17 @@ export const dataProvider = createGQlessDataProvider({
       },
 
       /*
+       Or you can only customize which fields should be outputted.
+       In this case we want `otherField` to be outputted with a depth level of 3.
+      */
+      recordOutput: (record) => {
+        return {
+          ...selectFields(record, "*", 2),
+          otherField: selectFields(record?.otherField, "*", 3),
+        }
+      },
+
+      /*
        If you want to completely override a method for this resource
        and implement it yourself then do it in `overrideMethods`.
       */
