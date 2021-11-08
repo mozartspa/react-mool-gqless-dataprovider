@@ -11,6 +11,7 @@ import {
 } from "@react-mool/core"
 import { dset } from "dset"
 import { GQlessClient, GQlessError, Schema, selectFields } from "gqless"
+import { RecordNotFoundError } from "./helpers/errors"
 import { fixInputData } from "./helpers/fixInputData"
 import { createQueryBatcher } from "./helpers/queryBatcher"
 
@@ -211,7 +212,9 @@ export function createGQlessDataProvider(config: GQlessDataProviderConfig) {
 
   const getRecordOuput = (resource: string, result: any) => {
     const recordOutput = exceptions[resource]?.recordOutput
-    if (recordOutput) {
+    if (result == null) {
+      return result
+    } else if (recordOutput) {
       return recordOutput(result)
     } else {
       return selectFields(result, "*", getSelectFieldsDepth(resource))
@@ -289,7 +292,15 @@ export function createGQlessDataProvider(config: GQlessDataProviderConfig) {
       operations?.getOne,
       getOneOperation
     )
-    return runOperation("query", op, resource, params)
+
+    const record = await runOperation("query", op, resource, params)
+
+    // If record is null then throws an error
+    if (record == null) {
+      throw new RecordNotFoundError(params.id, resource)
+    }
+
+    return record
   }
 
   const defaultGetList: DataProvider["getList"] = async (resource, params) => {
