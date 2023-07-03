@@ -1,4 +1,4 @@
-import { GQlessClient } from "gqless"
+import { GQlessClient } from "@mozartspa/gqless"
 
 type RequestFunc<T> = () => T
 

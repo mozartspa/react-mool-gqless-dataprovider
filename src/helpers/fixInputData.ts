@@ -1,4 +1,4 @@
-import { parseSchemaType, Schema, Type } from "gqless"
+import { parseSchemaType, Schema, Type } from "@mozartspa/gqless"
 
 function isPlainObject(value: any) {
   return value != null && !Array.isArray(value)

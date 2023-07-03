@@ -1,3 +1,4 @@
+import { GQlessClient, GQlessError, Schema, selectFields } from "@mozartspa/gqless"
 import {
   DataProvider,
   DeleteParams,
@@ -10,7 +11,6 @@ import {
   ValidationError,
 } from "@react-mool/core"
 import { dset } from "dset"
-import { GQlessClient, GQlessError, Schema, selectFields } from "gqless"
 import { RecordNotFoundError } from "./helpers/errors"
 import { fixInputData } from "./helpers/fixInputData"
 import { createQueryBatcher } from "./helpers/queryBatcher"
