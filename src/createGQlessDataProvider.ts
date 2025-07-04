@@ -24,6 +24,7 @@ export type GQlessOperationConfig<TInput = any, TOutput = any> = {
 export type GQlessOperations = {
   getOne?: GQlessOperationConfig<GetOneParams, any>
   getList?: GQlessOperationConfig<GetListParams, GetListOutput>
+  getListForOptions?: GQlessOperationConfig<GetListParams, GetListOutput>
   create?: GQlessOperationConfig<any, any>
   update?: GQlessOperationConfig<UpdateParams, any>
   delete?: GQlessOperationConfig<DeleteParams, any>
@@ -312,6 +313,19 @@ export function createGQlessDataProvider(config: GQlessDataProviderConfig) {
     return runOperation("query", op, resource, params)
   }
 
+  const defaultGetListForOptions: DataProvider["getListForOptions"] = async (
+    resource,
+    params
+  ) => {
+    const op = mergeOperations(
+      exceptions[resource]?.operations?.getListForOptions ||
+        exceptions[resource]?.operations?.getList,
+      operations?.getListForOptions || operations?.getList,
+      getListOperation
+    )
+    return runOperation("query", op, resource, params)
+  }
+
   const defaultCreate: DataProvider["create"] = async (resource, params) => {
     const op = mergeOperations(
       exceptions[resource]?.operations?.create,
@@ -359,6 +373,15 @@ export function createGQlessDataProvider(config: GQlessDataProviderConfig) {
         exceptions[resource]?.overrideMethods?.getList ||
         overrideMethods.getList ||
         defaultGetList
+
+      return withErrorHandler(func)(resource, params)
+    },
+
+    getListForOptions: async (resource, params) => {
+      const func =
+        exceptions[resource]?.overrideMethods?.getListForOptions ||
+        overrideMethods.getListForOptions ||
+        defaultGetListForOptions
 
       return withErrorHandler(func)(resource, params)
     },
