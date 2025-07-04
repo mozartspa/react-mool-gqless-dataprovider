@@ -48,5 +48,8 @@
   },
   "dependencies": {
     "dset": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
